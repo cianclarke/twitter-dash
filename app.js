@@ -1,4 +1,5 @@
 var express = require('express');
+var http = require('http');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -8,6 +9,12 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 
 var app = express();
+var port = process.env.PORT || '3000';
+app.set('port', port);
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+server.listen(port);
+server.on('listening', onListening);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -38,10 +45,7 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
+    res.json(err);
   });
 }
 
@@ -49,11 +53,15 @@ if (app.get('env') === 'development') {
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+  res.json(err);
 });
 
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  console.log('Listening on ' + bind);
+}
 
 module.exports = app;
