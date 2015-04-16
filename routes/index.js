@@ -22,22 +22,18 @@ router.get('/search', function(req, res, next){
 
  });
  var countries = db.countriesByHashtag(hashtag, function(err, countries){
-   if (country){
-     return db.findByCountry(hashtag, country, function(err, tweets){
+   // TODO: Callback hell - introduce async.series()
+   return db.findTweets(hashtag, country, function(err, tweets){
+     if (err){
+       return res.json(err);
+     }
+     return db.sortByDate(hashtag, function(err, times){
        if (err){
          return res.json(err);
        }
-       
-       return res.render('stream', { hashtag : hashtag, historic_tweets : tweets, countries : countries });
+       console.log(times);
+       return res.render('stream', { hashtag : hashtag, historic_tweets : tweets, countries : countries, times : times });   
      });
-   }
-   // no country specified - TODO, should we do this at all??
-   client.get('search/tweets', {q: hashtag }, function(error, tweets, response){
-     var statuses = tweets.statuses;
-       if (err){
-         return res.json(err);
-       }
-       return res.render('stream', { hashtag : hashtag, historic_tweets : statuses, countries : countries });
    });
  });
 });
