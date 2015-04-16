@@ -100,7 +100,22 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <script src="javascript/lib/bootstrap.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="javascripts/lib/bootstrap.js"></script>
+    <script src="javascripts/lib/underscore.js"></script>
+    <script>
+      var socket = io();
+      // NB won't scale for multiple query strings :-(
+      var hashtag = _.last(window.location.href.split('hashtag='));
+      socket.emit('subscribe', hashtag);
+
+      socket.on('tweet', function(msg){
+        console.log(msg);
+        $('.tweets').append($('<li>').text(msg.text));
+      });
+
+    </script>
+
     
   </body>
 </html>

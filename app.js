@@ -6,8 +6,6 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var routes = require('./routes/index');
-
 var app = express();
 var port = process.env.PORT || '3000';
 app.set('port', port);
@@ -15,6 +13,9 @@ var server = http.createServer(app);
 var io = require('socket.io')(server);
 server.listen(port);
 server.on('listening', onListening);
+
+var indexRoute = require('./routes/index');
+var steamingRoute = require('./routes/streaming')(io);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -29,7 +30,9 @@ app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
+app.use('/', indexRoute);
+app.use('/stream', steamingRoute);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
