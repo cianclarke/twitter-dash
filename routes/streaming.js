@@ -1,6 +1,7 @@
-var express = require('express');
-var Twitter = require('twitter');
-var subscribers = {},
+var express = require('express'),
+Twitter = require('twitter'),
+dbClient = require('../lib/db')(),
+subscribers = {},
 streams = {};
 
 function subscribe(hashtag){
@@ -15,7 +16,15 @@ function subscribe(hashtag){
     streams[hashtag] = stream;
     
     stream.on('data', function(tweet) {
+      // add to our db for data crunching later
+      dbClient.insert(hashtag, tweet, function(){/*noop, fire and forget*/});
+      // emit to all our subscribers
       subscribers[hashtag].forEach(function(socket){
+        var tweetCountry = tweet && tweet.place && tweet.place.country || false;
+        // If this socket has a country filter, perform this here
+        if (socket.country && socket.country !== tweetCountry ){
+          return;
+        }
         socket.emit('tweet', tweet);
       });
       
@@ -30,6 +39,10 @@ function subscribe(hashtag){
 module.exports = function(io){
   var router = express.Router();
   io.on('connection', function(socket){
+    socket.on('country', function(country){
+      // Socket has told us it wants to filter by country
+      socket.country = country;
+    });
     socket.on('subscribe', function(hashtag){
       socket.hashtag = hashtag;
       subscribers[hashtag] = subscribers[hashtag] || [];
