@@ -109,10 +109,21 @@
       var hashtag = _.last(window.location.href.split('hashtag='));
       socket.emit('subscribe', hashtag);
 
-      socket.on('tweet', function(msg){
-        console.log(msg);
-        $('.tweets').append($('<li>').text(msg.text));
-      });
+      socket.on('tweet', renderTweet);
+      
+      function renderTweet(tweet){
+        // TODO: This should really be a shared EJS template from above rendered using the clientside EJS lib
+        var html = 
+        '<div class="tweet jumbotron">' +
+        '<img class="pull-right img-circle" src=" ' + tweet.user.profile_image_url + '" alt=" '+ tweet.user.name + '" />'+
+        '<h2>@'+ tweet.user.screen_name+ '</h2>'+
+        '<time> '+ tweet.created_at + '</time>'+
+        '<p>' + tweet.text + '</p>'+
+        '</div>';
+        $('.tweets').prepend(html);
+        return html;
+      }
+      
 
     </script>
 
